@@ -1,4 +1,5 @@
 import { ref } from 'vue'
+import { contactMessages } from '../server/utils/data'
 
 export const useMessages = () => {
   const messages = useState<any[]>('messages-state', () => [])
@@ -7,7 +8,7 @@ export const useMessages = () => {
   const fetchMessages = async () => {
     isLoading.value = true
     try {
-      const data = await $fetch<any[]>('/api/admin/messages')
+      const data = contactMessages
       if (data) {
         messages.value = data
       }
@@ -20,15 +21,9 @@ export const useMessages = () => {
 
   const markAsRead = async (id: string) => {
     try {
-      const response = await $fetch(`/api/admin/messages/${id}`, {
-        method: 'PUT',
-        body: { status: 'read' }
-      })
-      if (response) {
-        const index = messages.value.findIndex(m => m.id === id)
-        if (index !== -1) {
-          messages.value[index] = response
-        }
+      const index = messages.value.findIndex(m => m.id === id)
+      if (index !== -1) {
+        messages.value[index] = { ...messages.value[index], status: 'read' }
       }
     } catch (error) {
       console.error('Failed to mark message as read', error)
@@ -38,9 +33,6 @@ export const useMessages = () => {
 
   const deleteMessage = async (id: string) => {
     try {
-      await $fetch(`/api/admin/messages/${id}`, {
-        method: 'DELETE'
-      })
       messages.value = messages.value.filter(m => m.id !== id)
     } catch (error) {
       console.error('Failed to delete message', error)

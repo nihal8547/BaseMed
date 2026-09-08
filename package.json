@@ -16,6 +16,7 @@
     "@nuxtjs/supabase": "^2.0.10",
     "@supabase/ssr": "^0.12.6",
     "@supabase/supabase-js": "^2.116.0",
+    "@vercel/global-config": "^1.5.1",
     "lucide-vue-next": "^1.0.0",
     "nuxt": "^3.21.8",
     "vue": "^3.5.39",

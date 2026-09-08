@@ -1,4 +1,5 @@
 import { ref, computed } from 'vue'
+import { productsData } from '../server/utils/data'
 
 export const useProducts = () => {
   const products = useState<any[]>('products-state', () => [])
@@ -8,7 +9,7 @@ export const useProducts = () => {
   const fetchProducts = async () => {
     isLoading.value = true
     try {
-      const data = await $fetch<any[]>('/api/products')
+      const data = productsData
       if (data) {
         products.value = data
         isProductsFetched.value = true
@@ -22,14 +23,12 @@ export const useProducts = () => {
 
   const addProduct = async (productData: any) => {
     try {
-      const response = await $fetch('/api/products', {
-        method: 'POST',
-        body: productData
-      })
-      if (response) {
-        products.value.push(response)
-        return response
+      const newProduct = {
+        ...productData,
+        id: Math.random().toString(36).substr(2, 9)
       }
+      products.value.push(newProduct)
+      return newProduct
     } catch (error) {
       console.error('Failed to add product', error)
       throw error
@@ -38,16 +37,10 @@ export const useProducts = () => {
 
   const updateProduct = async (id: string, productData: any) => {
     try {
-      const response = await $fetch(`/api/products/${id}`, {
-        method: 'PUT',
-        body: productData
-      })
-      if (response) {
-        const index = products.value.findIndex(p => p.id === id)
-        if (index !== -1) {
-          products.value[index] = response
-        }
-        return response
+      const index = products.value.findIndex(p => p.id === id)
+      if (index !== -1) {
+        products.value[index] = { ...products.value[index], ...productData }
+        return products.value[index]
       }
     } catch (error) {
       console.error('Failed to update product', error)
@@ -57,9 +50,6 @@ export const useProducts = () => {
 
   const deleteProduct = async (id: string) => {
     try {
-      await $fetch(`/api/products/${id}`, {
-        method: 'DELETE'
-      })
       products.value = products.value.filter(p => p.id !== id)
     } catch (error) {
       console.error('Failed to delete product', error)
