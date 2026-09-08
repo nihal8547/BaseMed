@@ -1,5 +1,4 @@
 import { ref } from 'vue'
-import { categoriesData } from '../server/utils/data'
 
 export const useCategories = () => {
   const categories = useState<any[]>('categories-state', () => [])
@@ -9,8 +8,7 @@ export const useCategories = () => {
   const fetchCategories = async () => {
     isLoading.value = true
     try {
-      // Direct mock data instead of API call
-      const data = categoriesData
+      const data = await $fetch<any[]>('/api/categories')
       if (data) {
         categories.value = data
         isCategoriesFetched.value = true
@@ -24,13 +22,14 @@ export const useCategories = () => {
 
   const addCategory = async (categoryData: { name: string }) => {
     try {
-      const newCategory = {
-        id: Math.random().toString(36).substr(2, 9),
-        name: categoryData.name,
-        slug: categoryData.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '')
+      const response = await $fetch('/api/categories', {
+        method: 'POST',
+        body: categoryData
+      })
+      if (response) {
+        categories.value.push(response)
+        return response
       }
-      categories.value.push(newCategory)
-      return newCategory
     } catch (error) {
       console.error('Failed to add category', error)
       throw error
@@ -39,10 +38,16 @@ export const useCategories = () => {
 
   const updateCategory = async (id: string, categoryData: { name: string }) => {
     try {
-      const index = categories.value.findIndex(c => c.id === id)
-      if (index !== -1) {
-        categories.value[index] = { ...categories.value[index], name: categoryData.name }
-        return categories.value[index]
+      const response = await $fetch(`/api/categories/${id}`, {
+        method: 'PUT',
+        body: categoryData
+      })
+      if (response) {
+        const index = categories.value.findIndex(c => c.id === id)
+        if (index !== -1) {
+          categories.value[index] = response
+        }
+        return response
       }
     } catch (error) {
       console.error('Failed to update category', error)
@@ -52,6 +57,9 @@ export const useCategories = () => {
 
   const deleteCategory = async (id: string) => {
     try {
+      await $fetch(`/api/categories/${id}`, {
+        method: 'DELETE'
+      })
       categories.value = categories.value.filter(c => c.id !== id)
     } catch (error: any) {
       const msg = error.data?.statusMessage || 'Failed to delete category'

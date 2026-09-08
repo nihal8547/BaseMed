@@ -1,5 +1,4 @@
 import { useState } from 'nuxt/app'
-import { cmsData } from '../server/utils/data'
 import { ref } from 'vue'
 
 export const useSiteContent = () => {
@@ -9,7 +8,7 @@ export const useSiteContent = () => {
   const fetchContent = async () => {
     isLoading.value = true
     try {
-      const data = cmsData
+      const data = await $fetch<any>('/api/content/homepage')
       if (data) {
         cmsContent.value = data
       }
@@ -22,8 +21,14 @@ export const useSiteContent = () => {
 
   const updateContent = async (newData: any) => {
     try {
-      cmsContent.value = newData
-      return newData
+      const response = await $fetch('/api/content/homepage', {
+        method: 'PUT',
+        body: newData
+      })
+      if (response) {
+        cmsContent.value = response
+      }
+      return response
     } catch (error) {
       console.error('Failed to update CMS content', error)
       throw error
